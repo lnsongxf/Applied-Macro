@@ -145,9 +145,14 @@ lnL = -(1/2*((T*log(2*pi) + iterMLE)));
    
 MLEoutput = -lnL;
 
-% output =  0.5 * sum(output_1) + 0.5* sum(output_2);
 
+% Drop the first column in CSI and P, just used for the initial values of every i
+% loop
+CSI = CSI(:,2:end);
+P = P(:,2:end);
 
-
+% Drop the first time
+csi = csi(2:end,:);
+p = p(2:end, :);
 
 end % end of the function
