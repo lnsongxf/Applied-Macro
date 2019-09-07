@@ -18,7 +18,7 @@
 % SmVarCSI: Txr variances of the smoothed series
 % SmSdCSI = square root of SmVARCSI
 
-function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate(csi, CSI, p, P, eta, f, F, Ht )
+function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate(CSI, p, P, eta, f, F, Ht )
 
 
 T = size(CSI, 1);
@@ -59,7 +59,7 @@ while t > 0
     W{t} = Httrpinv * Ht(t+1, :) + L{t+1}' * W{t+1} * L{t+1}; %rxM Mxr + rxr rxr rxr  -> rxr
     rr{t} = Httrpinv * eta(t+1,1) + L{t+1}' * rr{t+1}; 
 
-    csiS{t+1} = csi{t} + p{t} * rr{t}; % rx1 + rxr rx1 -> r x 1
+    csiS{t+1} = CSI{t} + p{t} * rr{t}; % rx1 + rxr rx1 -> r x 1
     PSmooth{t+1} = p{t} - p{t}* W{t} * p{t}; % rxr rxr rxr  -> r x r
   
 
