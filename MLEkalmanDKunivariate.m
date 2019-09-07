@@ -91,8 +91,8 @@ P = cell(T,M);
 
 % Intermediate steps
 k = cell(T,M);      % Kalman gain. dim: rxr x rxM x MxM -> rxM (in this case rx1)
-eta = zeros(T,1); 
-f = zeros(T,1); % MxM, same ar R
+eta = zeros(T,M); 
+f = zeros(T,M); % MxM, same ar R
 
 % Output of the Kalman loop
 output_1 = zeros(T,1);
