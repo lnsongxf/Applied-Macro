@@ -33,7 +33,7 @@
 
 
 %==========================================================================
-function [MLEoutput, CSI, csi, P, p, f, eta] = MLEkalmanDKunivariate(y, X, H, csi_not, P_not, x)
+function [MLEoutput, CSI, P, p, f, eta] = MLEkalmanDKunivariate(y, X, H, csi_not, P_not, x)
 
 
 % % ------------ MLE parameters ------------
