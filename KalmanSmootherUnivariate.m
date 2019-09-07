@@ -21,14 +21,14 @@
 function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate(csi, CSI, p, P, eta, f, F, Ht )
 
 
-T = size(csi, 1);
+T = size(CSI, 1);
 r = size(Ht, 2); % number of unobserved variables
 
 
 
 % Store
-csiS = cell(T,1); % rx1
-PSmooth = cell(T,1); % rxr
+csiS = cell(T+1,1); % rx1
+PSmooth = cell(T+1,1); % rxr
 
 
 L = cell(T,1); % each L is rxr, as F
@@ -52,19 +52,17 @@ W{T} = zeros(r,r) ;
 t = T-1;
 while t > 0
     
-    
-    for i = 1:M
-        
-        Httrpinv = Ht(t+1,:)' / f(t+1,); % r x M * M x M -> r x M
 
-        L{t+1} = F - (F * p{t} * Httrpinv) * Ht(t+1,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Httrpinv) is the Kalman gain
-        W{t} = Httrpinv * Ht(t+1, :) + L{t+1}' * W{t+1} * L{t+1}; %rxM Mxr + rxr rxr rxr  -> rxr
-        rr{t} = Httrpinv * eta(t+1,1) + L{t+1}' * rr{t+1}; 
+    Httrpinv = Ht(t+1,:)' * pinv(f(t+1,1)); % r x M * M x M -> r x M
 
-        csiS{t+1} = csi{t} + p{t} * rr{t}; % rx1 + rxr rx1 -> r x 1
-        PSmooth{t+1} = p{t} - p{t}* W{t} * p{t}; % rxr rxr rxr  -> r x r
+    L{t+1} = F - (F * p{t} * Httrpinv) * Ht(t+1,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Httrpinv) is the Kalman gain
+    W{t} = Httrpinv * Ht(t+1, :) + L{t+1}' * W{t+1} * L{t+1}; %rxM Mxr + rxr rxr rxr  -> rxr
+    rr{t} = Httrpinv * eta(t+1,1) + L{t+1}' * rr{t+1}; 
+
+    csiS{t+1} = csi{t} + p{t} * rr{t}; % rx1 + rxr rx1 -> r x 1
+    PSmooth{t+1} = p{t} - p{t}* W{t} * p{t}; % rxr rxr rxr  -> r x r
   
-    end
+
     
     t = t-1;    
 end
