@@ -18,57 +18,57 @@
 % SmVarCSI: Txr variances of the smoothed series
 % SmSdCSI = square root of SmVARCSI
 
-function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate(csi, CSI, p, P, eta, f, F, Ht )
+function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate(csi, CSI, p, P, eta, f, F, H )
 
 
-T = size(CSI, 1);
-r = size(Ht, 2); % number of unobserved variables
+[T , M] = size(CSI);
+r = size(H, 2); % number of unobserved variables
 
 
 
-% Store
-csiS = cell(T+1,1); % rx1
-PSmooth = cell(T+1,1); % rxr
-
-
-L = cell(T,1); % each L is rxr, as F
-W = cell(T,1);
-rr = cell(T,1);
-
-
+% Store: T+1 since it's a backward smoother and therefore we would loose
+% the first observation since matlab doesn't like index=0. To avoid the
+% issue I create a T+1 array and then remove the first (empty) 
+csiS = cell(T+1,M); % rx1
+PSmooth = cell(T+1,M); % rxr
 
 % Last Smoothed = Filtered. Start from T+1 so we don't loose any
 % observation
-
 csiS{T+1} = CSI{T};
 PSmooth{T+1} = P{T};
 
+
+% Intermediate values, to store temp
+
+W = cell(T,M);
+rr = cell(T,M);
+
 % Initial Values
-rr{T} = zeros(r,1) ;
-W{T} = zeros(r,r) ;
+rr{T,M} = zeros(r,1) ;
+W{T,M} = zeros(r,r) ;
+
 
 % loop
-t = T-1;
-while t > 0
+t = T;
+
+while t > 1
     
+    Htrpinv = H(t,:)' * pinv(f(t,1)); % r x M * M x M -> r x M
 
-    Httrpinv = Ht(t+1,:)' * pinv(f(t+1,1)); % r x M * M x M -> r x M
+    L = F - (F * p{t-1, 1} * Htrpinv) * H(t,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
+    W{t-1, 1} = Htrpinv * H(t, :) + L' * W{t, 1} * L; %rxM Mxr + rxr rxr rxr  -> rxr
+    rr{t-1, 1} = Htrpinv * eta(t,1) + L' * rr{t, 1}; 
 
-    L{t+1} = F - (F * p{t} * Httrpinv) * Ht(t+1,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Httrpinv) is the Kalman gain
-    W{t} = Httrpinv * Ht(t+1, :) + L{t+1}' * W{t+1} * L{t+1}; %rxM Mxr + rxr rxr rxr  -> rxr
-    rr{t} = Httrpinv * eta(t+1,1) + L{t+1}' * rr{t+1}; 
-
-    csiS{t+1} = csi{t} + p{t} * rr{t}; % rx1 + rxr rx1 -> r x 1
-    PSmooth{t+1} = p{t} - p{t}* W{t} * p{t}; % rxr rxr rxr  -> r x r
-  
-
+    csiS{t} = csi{t-1, 1} + p{t-1, 1} * rr{t-1, 1}; % rx1 + rxr rx1 -> r x 1
+    PSmooth{t} = p{t-1, 1} - p{t-1, 1}* W{t-1, 1} * p{t-1, 1}; % rxr rxr rxr  -> r x r
+    
     
     t = t-1;    
 end
 
 % Drop the first empty observation
 csiS = csiS(2:end , :) ;
-PSmooth = PSmooth(2:end, :) ;
+%PSmooth = PSmooth(2:end, :) ;
 
 
     
