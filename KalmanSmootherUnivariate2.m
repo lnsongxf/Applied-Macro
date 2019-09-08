@@ -51,19 +51,29 @@ W{T,M} = zeros(r,r) ;
 
 for t = T:-1:2 % until 2, not 1 since cannot compute it
     
+    % You start from t = T, m = M and then you go down first by M-1 etc
+    % when you reach t = T and m = 1, you move to the previous period and
+    % get the first value, i.e. t = T-1 and m = M
        
     for m = M:-1:1
         
+        % Intermediate elements
         Htrpinv = H(t,:)' * pinv(f(t,m)); % r x M * M x M -> r x M
-
         L = F - (F * p{t-1, m} * Htrpinv) * H(t,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
-        W{t-1, m} = Htrpinv * H(t, :) + L' * W{t, m} * L; %rxM Mxr + rxr rxr rxr  -> rxr
-        rr{t-1, m} = Htrpinv * eta(t,m) + L' * rr{t, m}; 
+        
+        % Dynamic elements
+        W{t, m-1} = Htrpinv * H(t, :) + L' * W{t, m} * L; %rxM Mxr + rxr rxr rxr  -> rxr
+        rr{t, m-1} = Htrpinv * eta(t,m) + L' * rr{t, m}; 
 
-        csiS{t} = csi{t-1, m} + p{t-1, m} * rr{t-1, m}; % rx1 + rxr rx1 -> r x 1
-        PSmooth{t} = p{t-1, m} - p{t-1, m}* W{t-1, m} * p{t-1, m}; % rxr rxr rxr  -> r x r
+        % Smoothes values
+        csiS{t, m} = csi{t, m-1} + p{t, m-1} * rr{t, m-1}; % rx1 + rxr rx1 -> r x 1
+        PSmooth{t, m} = p{t, m-1} - p{t, m-1}* W{t, m-1} * p{t, m-1}; % rxr rxr rxr  -> r x r
 
     end
+    
+    % Time Update
+    
+    
     
 end
 
