@@ -32,14 +32,12 @@ r = size(H, 2); % number of unobserved variables
 csiS = cell(T+1,M); % rx1
 PSmooth = cell(T+1,M); % rxr
 
-% Last Smoothed = Filtered. Start from T+1 so we don't loose any
-% observation
+% Last Smoothed = Filtered. Start from T+1 so we don't loose any observation
 csiS{T+1} = CSI{T};
 PSmooth{T+1} = P{T};
 
 
-% Intermediate values, to store temp
-
+% Intermediate values, to store temp dynamic var
 W = cell(T,M);
 rr = cell(T,M);
 
@@ -53,12 +51,15 @@ t = T;
 
 while t > 1
     
+    % Intermediate elements
     Htrpinv = H(t,:)' * pinv(f(t,1)); % r x M * M x M -> r x M
-
     L = F - (F * p{t-1, 1} * Htrpinv) * H(t,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
+    
+    % Dynamic elements
     W{t-1, 1} = Htrpinv * H(t, :) + L' * W{t, 1} * L; %rxM Mxr + rxr rxr rxr  -> rxr
     rr{t-1, 1} = Htrpinv * eta(t,1) + L' * rr{t, 1}; 
 
+    % Smoothes values
     csiS{t} = csi{t-1, 1} + p{t-1, 1} * rr{t-1, 1}; % rx1 + rxr rx1 -> r x 1
     PSmooth{t} = p{t-1, 1} - p{t-1, 1}* W{t-1, 1} * p{t-1, 1}; % rxr rxr rxr  -> r x r
     
@@ -68,7 +69,7 @@ end
 
 % Drop the first empty observation
 csiS = csiS(2:end , :) ;
-%PSmooth = PSmooth(2:end, :) ;
+PSmooth = PSmooth(2:end, :) ;
 
 
     
