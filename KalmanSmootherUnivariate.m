@@ -47,7 +47,6 @@ PSmooth{T+1} = P{T};
 rr{T} = zeros(r,1) ;
 W{T} = zeros(r,r) ;
 
-
 % loop
 t = T-1;
 while t > 0
