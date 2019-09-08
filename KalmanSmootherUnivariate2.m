@@ -57,22 +57,26 @@ for t = T:-1:2 % until 2, not 1 since cannot compute it
        
     for m = M:-1:1
         
+        m2m = m+1; % need a different index to avoid m = 0 but I want to keep the same notation as Koopman Durbin
+                
         % Intermediate elements
         Htrpinv = H(t,:)' * pinv(f(t,m)); % r x M * M x M -> r x M
-        L = F - (F * p{t-1, m} * Htrpinv) * H(t,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
+        L = F - (F * p{t, m-1} * Htrpinv) * H(t,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
         
         % Dynamic elements
-        W{t, m-1} = Htrpinv * H(t, :) + L' * W{t, m} * L; %rxM Mxr + rxr rxr rxr  -> rxr
-        rr{t, m-1} = Htrpinv * eta(t,m) + L' * rr{t, m}; 
+        W{t, m2m-1} = Htrpinv * H(t, :) + L' * W{t, m2m} * L; %rxM Mxr + rxr rxr rxr  -> rxr
+        rr{t, m2m-1} = Htrpinv * eta(t,m) + L' * rr{t, m2m}; 
 
         % Smoothes values
-        csiS{t, m} = csi{t, m-1} + p{t, m-1} * rr{t, m-1}; % rx1 + rxr rx1 -> r x 1
-        PSmooth{t, m} = p{t, m-1} - p{t, m-1}* W{t, m-1} * p{t, m-1}; % rxr rxr rxr  -> r x r
+        csiS{t, m} = csi{t, m-1} + p{t, m-1} * rr{t, m2m-1}; % rx1 + rxr rx1 -> r x 1
+        PSmooth{t, m} = p{t, m-1} - p{t, m-1}* W{t, m2m-1} * p{t, m-1}; % rxr rxr rxr  -> r x r
 
     end
     
-    % Time Update
+    % Time Update. Index is t so that you can call it with t
     
+    Wforecast{t-1, M} = F' * W{t, 1};
+    rrforecast{t-1, M} = F' * rr{t, 1} ;
     
     
 end
