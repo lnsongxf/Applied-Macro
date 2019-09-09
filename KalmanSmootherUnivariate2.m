@@ -18,18 +18,18 @@
 % SmVarCSI: Txr variances of the smoothed series
 % SmSdCSI = square root of SmVARCSI
 
-function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate2(csi, CSI, p, P, eta, f, F, H )
+function[csiS, csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate2(csi, CSI, p, P, eta, f, F, H )
 
 [T , M] = size(CSI);
 r = size(H, 2); % number of unobserved variables
 
 
 
-% Store: T+1 since it's a backward smoother and therefore we would loose
+% Store: M+1 since it's a backward smoother and therefore we would loose
 % the first observation since matlab doesn't like index=0. To avoid the
 % issue I create a T+1 array and then remove the first (empty) 
-csiS = cell(T+1,M); % rx1
-PSmooth = cell(T+1,M); % rxr
+csiS = cell(T,M); % rx1
+PSmooth = cell(T,M); % rxr
 
 % Last Smoothed = Filtered. Start from T+1 so we don't loose any
 % observation
@@ -37,14 +37,9 @@ csiS{T+1} = CSI{T};
 PSmooth{T+1} = P{T};
 
 
-% Intermediate values, to store temp
-
-W = cell(T,M);
-rr = cell(T,M);
-
 % Initial Values
-rr_not = zeros(r,1) ;
-W_not = zeros(r,r) ;
+rr = zeros(r,1) ;
+N = zeros(r,r) ;
 
 
 % loop
@@ -55,49 +50,33 @@ for t = T:-1:2 % until 2, not 1 since cannot compute it
     % when you reach t = T and m = 1, you move to the previous period and
     % get the first value, i.e. t = T-1 and m = M
        
-    for m = M:-1:1
-        
-        m2m = m+1;
-        
-        if t == T
-            W{t, M} = W_not;
-            rr{t, M} = rr_not;
-        else
-            W{t, M} = W_forecast{t};
-            rr{t, M} = rr_forecast{t};
-        end
+    for m = M:-1:1  
         
         
-        % Intermediate elements
-        Htrpinv = H(t,:)' * pinv(f(t,m)); % r x M * M x M -> r x M
-        L = F - (F * p{t, m-1} * Htrpinv) * H(t,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
+        L = F - (F * p{t-1} * H(t,:)' * pinv(f(t,m))) * H(t,:) ; % rxr rxr rxM MxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
         
-        % Dynamic elements
-        W{t, m-1} = Htrpinv * H(t, :) + L' * W{t, m} * L; %rxM Mxr + rxr rxr rxr  -> rxr
-        rr{t, m-1} = Htrpinv * eta(t,m) + L' * rr{t, m}; 
-
-        % Smoothes values
-        csiSmooth{t, m} = csi{t, m-1} + p{t, m-1} * rr{t, m-1}; % rx1 + rxr rx1 -> r x 1
-        PSmooth{t, m} = p{t, m-1} - p{t, m-1}* W{t, m-1} * p{t, m-1}; % rxr rxr rxr  -> r x r
+        N = H(t,:)' * pinv(f(t,m)) * H(t, :) + L' * N * L;  % rxM MxM Mxr + rxr rxr rxr  -> rxr
+        rr = H(t,:)' * pinv(f(t,m)) * eta(t,m) + L' * rr;   % rxM 1x1 1x1 +  rxr rx1 -> rxM
 
     end
     
-    % Time Update. Index is t so that you can call it with t
+    % Smoothed values
+    csiS{t} = csi{t} + p{t-1} * rr; % rx1 + rxr rx1 -> r x 1
+    PSmooth{t} = p{t-1} - p{t-1}* N * p{t-1}; % rxr rxr rxr  -> r x r
     
-    W_forecast{t-1} = F' * W{t, 1}* F';
-    rr_forecast{t-1} = F' * rr{t, 1} ;
+    % Time Update. Index is t so that you can call it with t
+    rr = F' * rr ;
+    N = F' * N * F ;
     
     
 end
 
 % Drop the first empty observation
-csiSmooth = csiSmooth(2:end , :) ;
+csiS = csiS(2:end , :) ;
 PSmooth = PSmooth(2:end, :) ;
 
-
-    
 % Array form
-csiSmoothmooth = cell2mat(cellfun(@transpose, csiSmooth, 'UniformOutput', false));
+csiSmooth = cell2mat(cellfun(@transpose, csiS, 'UniformOutput', false));
 
 % The following line executes these operation (in order): 1) diagonal of
 % the variance, 2) transpose, which serves for 3) array form
