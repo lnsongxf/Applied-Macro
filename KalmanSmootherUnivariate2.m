@@ -43,8 +43,8 @@ W = cell(T,M);
 rr = cell(T,M);
 
 % Initial Values
-rr{T,M} = zeros(r,1) ;
-W{T,M} = zeros(r,r) ;
+rr_not = zeros(r,1) ;
+W_not = zeros(r,r) ;
 
 
 % loop
@@ -57,38 +57,47 @@ for t = T:-1:2 % until 2, not 1 since cannot compute it
        
     for m = M:-1:1
         
-        m2m = m+1; % need a different index to avoid m = 0 but I want to keep the same notation as Koopman Durbin
-                
+        m2m = m+1;
+        
+        if t == T
+            W{t, M} = W_not;
+            rr{t, M} = rr_not;
+        else
+            W{t, M} = W_forecast{t};
+            rr{t, M} = rr_forecast{t};
+        end
+        
+        
         % Intermediate elements
         Htrpinv = H(t,:)' * pinv(f(t,m)); % r x M * M x M -> r x M
         L = F - (F * p{t, m-1} * Htrpinv) * H(t,:) ; % rxr rxr rxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
         
         % Dynamic elements
-        W{t, m2m-1} = Htrpinv * H(t, :) + L' * W{t, m2m} * L; %rxM Mxr + rxr rxr rxr  -> rxr
-        rr{t, m2m-1} = Htrpinv * eta(t,m) + L' * rr{t, m2m}; 
+        W{t, m-1} = Htrpinv * H(t, :) + L' * W{t, m} * L; %rxM Mxr + rxr rxr rxr  -> rxr
+        rr{t, m-1} = Htrpinv * eta(t,m) + L' * rr{t, m}; 
 
         % Smoothes values
-        csiS{t, m} = csi{t, m-1} + p{t, m-1} * rr{t, m2m-1}; % rx1 + rxr rx1 -> r x 1
-        PSmooth{t, m} = p{t, m-1} - p{t, m-1}* W{t, m2m-1} * p{t, m-1}; % rxr rxr rxr  -> r x r
+        csiSmooth{t, m} = csi{t, m-1} + p{t, m-1} * rr{t, m-1}; % rx1 + rxr rx1 -> r x 1
+        PSmooth{t, m} = p{t, m-1} - p{t, m-1}* W{t, m-1} * p{t, m-1}; % rxr rxr rxr  -> r x r
 
     end
     
     % Time Update. Index is t so that you can call it with t
     
-    Wforecast{t-1, M} = F' * W{t, 1};
-    rrforecast{t-1, M} = F' * rr{t, 1} ;
+    W_forecast{t-1} = F' * W{t, 1}* F';
+    rr_forecast{t-1} = F' * rr{t, 1} ;
     
     
 end
 
 % Drop the first empty observation
-csiS = csiS(2:end , :) ;
+csiSmooth = csiSmooth(2:end , :) ;
 PSmooth = PSmooth(2:end, :) ;
 
 
     
 % Array form
-csiSmooth = cell2mat(cellfun(@transpose, csiS, 'UniformOutput', false));
+csiSmoothmooth = cell2mat(cellfun(@transpose, csiSmooth, 'UniformOutput', false));
 
 % The following line executes these operation (in order): 1) diagonal of
 % the variance, 2) transpose, which serves for 3) array form
