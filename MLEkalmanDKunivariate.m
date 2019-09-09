@@ -84,8 +84,8 @@ F = eye(r);
 % ------------------- Initialize --------------
 
 % Predicted 
-csi = cell(T,M);    % rx1
-p = cell(T,M);      % same dimension as Q (r x r) -> number of unobserved (matrix-> T cells)
+csi = cell(T,1);    % rx1
+p = cell(T,1);      % same dimension as Q (r x r) -> number of unobserved (matrix-> T cells)
 
 % Updated 
 CSI = cell(T,M);
@@ -128,8 +128,8 @@ for t = 1:T
     end
     
     % Time Predict
-    csi{t+1} = F * CSI{t, M+1} ;
-    p{t+1} = F * P{t, M+1} * F' + Q ;
+    csi{t+1} = F * CSI{t, M+1} ; % rx1
+    p{t+1} = F * P{t, M+1} * F' + Q ; %rxr
     
        
 
