@@ -94,9 +94,9 @@ k = cell(T,M);      % Kalman gain. dim: rxr x rxM x MxM -> rxM (in this case rx1
 eta = zeros(T,M); 
 f = zeros(T,M); % MxM, same ar R
 
-% Output of the Kalman loop
-output_1 = zeros(T,1);
 
+% Intialize likelihood function
+iterMLE = 0;
 
 for t = 1:T    
     
@@ -120,24 +120,19 @@ for t = 1:T
         CSI{t, i+1} = CSI{t, i} +  k{t, i} * eta(t,i);
         P{t, i+1} = P{t, i} - k{t, i} * H(t, :) * P{t, i};
 
-
+        % Likelihood
+        iterMLE = iterMLE + log(f(t,i)) + eta(t,i)'*pinv(f(t,i))*eta(t,i);
+   
     end
     
-    % Predict
-    
+    % Time Predict
     csi{t+1} = F * CSI{t, M+1} ;
     p{t+1} = F * P{t, M+1} * F' + Q ;
     
-    
-    
-    
-    
-    
-    output_1(t,1) = log(f(t,1)) + eta(t,1)'*pinv(f(t,1))*eta(t,1);
+       
 
 end % end of the loop
     
-iterMLE = sum(output_1);
 
 lnL = -(1/2*((T*log(2*pi) + iterMLE)));
    
