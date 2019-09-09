@@ -1,5 +1,7 @@
 %% Kalman and MLE estimation
 
+% Author: Giacomo Romanini - use it freely, at your own risk
+
 % version 1.0: 13 March 2018
 % version 1.2:  17 April 2019. changes:
 %               - fixed Xt transpose (same result but easier to read)
@@ -104,11 +106,11 @@ for t = 1:T
     for i = 1:M
         
         if t ==1 
-            CSI{t, i} = csi_not;
-            P{t, i} = P_not;
+            CSI{t, 1} = csi_not;
+            P{t, 1} = P_not;
         else
-            CSI{t, i} = csi{t};
-            P{t, i} = p{t};
+            CSI{t, 1} = csi{t};
+            P{t, 1} = p{t};
         end
 
         % Filtering equations
