@@ -1,3 +1,5 @@
+% VERSION: 08 September 2019 - Giacomo Romanini - use it at your own risk
+
 % Kalman Smoother for UNIVARIATE Kalman Filter as in Durbin Koopman 2012.
 % tested to work for univariate filter set as in DK2012, i.e. update step
 % first and predict later
