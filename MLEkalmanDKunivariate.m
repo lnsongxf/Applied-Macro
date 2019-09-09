@@ -103,9 +103,6 @@ for t = 1:T
     % Looping over multivariate variables
     for i = 1:M
         
-        % Filtering equations
-  
-            
         if t ==1 
             CSI{t, i} = csi_not;
             P{t, i} = P_not;
@@ -114,6 +111,7 @@ for t = 1:T
             P{t, i} = p{t};
         end
 
+        % Filtering equations
         eta(t,i) = y(t,i) - A*X(t,:) - H(t, :)* CSI{t, i}; % forecast error for the observation equation   
         f(t,i) = H(t, :)*P{t, i}* H(t,:)' + R; % mean squared error (+ uncertainty)
         k{t, i} = P{t, i} * H(t, :)' * pinv(f(t,i)); % Kalman Gain
