@@ -65,18 +65,14 @@ A = reshape(A, M, obs);
 
 R = [];
 for i = M*obs+1: M*obs+M
-    R = [R', x(i)^2]';
+    R = [R, x(i)^2];
 end
-R = reshape(R, M, 1);
 
 Q = [];
 for i = M*obs+M+1: M*obs+M+r
     Q = [Q', x(i)^2]';
 end
 Q = diag(Q);
-
-
-
 
 
  
@@ -120,8 +116,8 @@ for t = 1:T
 
 
         % Filtering equations
-        eta(t,i) = y(t,i) - A*X(t,:) - H(t+(i-1)*T, :)* CSI{t, i}; % forecast error for the observation equation   
-        f(t,i) = H( t+(i-1)*T, :)*P{t, i}* H( t+(i-1)*T,:)' + R; % mean squared error (+ uncertainty)
+        eta(t,i) = y(t,i) - A(i)*X(t,:) - H(t+(i-1)*T, :)* CSI{t, i}; % forecast error for the observation equation   
+        f(t,i) = H( t+(i-1)*T, :)*P{t, i}* H( t+(i-1)*T,:)' + R(i); % mean squared error (+ uncertainty)
         k{t, i} = P{t, i} * H(t+(i-1)*T, :)' * pinv(f(t,i)); % Kalman Gain
 
         % Update     
