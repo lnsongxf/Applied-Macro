@@ -18,7 +18,7 @@
 % SmVarCSI: Txr variances of the smoothed series
 % SmSdCSI = square root of SmVARCSI
 
-function[csiS, csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate2(csi, CSI, p, P, eta, f, F, H )
+function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate2(csi, CSI, p, P, eta, f, F, H )
 
 [T , M] = size(CSI);
 r = size(H, 2); % number of unobserved variables
@@ -61,7 +61,7 @@ for t = T:-1:2 % until 2, not 1 since cannot compute it
     end
     
     % Smoothed values
-    csiS{t} = csi{t} + p{t-1} * rr; % rx1 + rxr rx1 -> r x 1
+    csiS{t} = csi{t-1} + p{t-1} * rr; % rx1 + rxr rx1 -> r x 1
     PSmooth{t} = p{t-1} - p{t-1}* N * p{t-1}; % rxr rxr rxr  -> r x r
     
     % Time Update. Index is t so that you can call it with t
