@@ -18,18 +18,16 @@
 % SmVarCSI: Txr variances of the smoothed series
 % SmSdCSI = square root of SmVARCSI
 
-function[csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate2(csi, CSI, p, P, eta, f, F, H )
+function[csiS, csiSmooth, SmVarCSI, SmSdCSI] = KalmanSmootherUnivariate2(csi, CSI, p, P, eta, f, F, H )
 
 [T , M] = size(CSI);
 r = size(H, 2); % number of unobserved variables
 
 
 
-% Store: M+1 since it's a backward smoother and therefore we would loose
-% the first observation since matlab doesn't like index=0. To avoid the
-% issue I create a T+1 array and then remove the first (empty) 
-csiS = cell(T,M); % rx1
-PSmooth = cell(T,M); % rxr
+% Store 
+csiS = cell(T,1); % rx1
+PSmooth = cell(T,1); % rxr
 
 % Last Smoothed = Filtered. Start from T+1 so we don't loose any
 % observation
@@ -53,10 +51,10 @@ for t = T:-1:2 % until 2, not 1 since cannot compute it
     for m = M:-1:1  
         
         
-        L = F - (F * p{t-1} * H(t,:)' * pinv(f(t,m))) * H(t,:) ; % rxr rxr rxM MxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
+        L = F - (F * p{t-1} * H(t+(m-1)*T,:)' * pinv(f(t,m))) * H(t+(m-1)*T,:) ; % rxr rxr rxM MxM Mxr -> r x r; (p{t-1} * Htrpinv) is the Kalman gain
         
-        N = H(t,:)' * pinv(f(t,m)) * H(t, :) + L' * N * L;  % rxM MxM Mxr + rxr rxr rxr  -> rxr
-        rr = H(t,:)' * pinv(f(t,m)) * eta(t,m) + L' * rr;   % rxM 1x1 1x1 +  rxr rx1 -> rxM
+        N = H(t+(m-1)*T,:)' * pinv(f(t,m)) * H(t+(m-1)*T, :) + L' * N * L;  % rxM MxM Mxr + rxr rxr rxr  -> rxr
+        rr = H(t+(m-1)*T,:)' * pinv(f(t,m)) * eta(t,m) + L' * rr;   % rxM 1x1 1x1 +  rxr rx1 -> rxM
 
     end
     
